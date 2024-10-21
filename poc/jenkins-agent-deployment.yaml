@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jenkins-agent
+  namespace: jenkins
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jenkins-agent
+  template:
+    metadata:
+      labels:
+        app: jenkins-agent
+    spec:
+      containers:
+      - name: jenkins-agent
+        image: ihebrj/jenkins-agent:latest
+        env:
+        - name: JENKINS_URL
+          value: "http://jenkins-service:8080"  # Use the Jenkins service from the current namespace
+        - name: JENKINS_AGENT_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: JENKINS_SECRET
+          value: "8aaaf08fa4644154ca4ee95abe679dc3e97d9462c9b08ff04f3098034d57e31c"  # Agent secret from Jenkins UI
+        - name: JENKINS_AGENT_WORKDIR
+          value: "/home/jenkins"  # Define the working directory for the agent
+        volumeMounts:
+        - name: docker-socket
+          mountPath: /var/run/docker.sock
+      volumes:
+      - name: docker-socket
+        hostPath:
+          path: /var/run/docker.sock
+          type: Socket

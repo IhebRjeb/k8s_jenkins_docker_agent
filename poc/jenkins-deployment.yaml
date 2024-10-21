@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jenkins
+  namespace: jenkins
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jenkins
+  template:
+    metadata:
+      labels:
+        app: jenkins
+    spec:
+      containers:
+      - name: jenkins
+        image: jenkins/jenkins:lts
+        ports:
+        - containerPort: 8080
+        volumeMounts:
+        - name: jenkins-data
+          mountPath: /var/jenkins_home
+      volumes:
+      - name: jenkins-data
+        persistentVolumeClaim:
+          claimName: jenkins-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: jenkins-service
+  namespace: jenkins
+spec:
+  type: NodePort  # Or ClusterIP if you're only accessing it within the cluster
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
+      nodePort: 31532
+    - name: jnlp
+      port: 50000
+      targetPort: 50000
+  selector:
+    app: jenkins
+
